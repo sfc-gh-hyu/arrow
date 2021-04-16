@@ -40,6 +40,7 @@ ARROW_GRPC_BUILD_VERSION=v1.33.2
 ARROW_GTEST_BUILD_VERSION=1.10.0
 ARROW_JEMALLOC_BUILD_VERSION=5.2.1
 ARROW_LZ4_BUILD_VERSION=v1.9.2
+ARROW_LZO_BUILD_VERSION=2.10
 ARROW_MIMALLOC_BUILD_VERSION=v1.6.4
 ARROW_ORC_BUILD_VERSION=1.6.2
 ARROW_PROTOBUF_BUILD_VERSION=v3.13.0
@@ -73,6 +74,7 @@ DEPENDENCIES=(
   "ARROW_GTEST_URL gtest-${ARROW_GTEST_BUILD_VERSION}.tar.gz https://github.com/google/googletest/archive/release-${ARROW_GTEST_BUILD_VERSION}.tar.gz"
   "ARROW_JEMALLOC_URL jemalloc-${ARROW_JEMALLOC_BUILD_VERSION}.tar.bz2 https://github.com/jemalloc/jemalloc/releases/download/${ARROW_JEMALLOC_BUILD_VERSION}/jemalloc-${ARROW_JEMALLOC_BUILD_VERSION}.tar.bz2"
   "ARROW_LZ4_URL lz4-${ARROW_LZ4_BUILD_VERSION}.tar.gz https://github.com/lz4/lz4/archive/${ARROW_LZ4_BUILD_VERSION}.tar.gz"
+  "ARROW_LZO_URL lzo-${ARROW_LZO_BUILD_VERSION}.tar.gz http://www.oberhumer.com/opensource/lzo/download/lzo-${ARROW_LZO_BUILD_VERSION}.tar.gz"
   "ARROW_MIMALLOC_URL mimalloc-${ARROW_MIMALLOC_BUILD_VERSION}.tar.gz https://github.com/microsoft/mimalloc/archive/${ARROW_MIMALLOC_BUILD_VERSION}.tar.gz"
   "ARROW_ORC_URL orc-${ARROW_ORC_BUILD_VERSION}.tar.gz https://github.com/apache/orc/archive/rel/release-${ARROW_ORC_BUILD_VERSION}.tar.gz"
   "ARROW_PROTOBUF_URL protobuf-${ARROW_PROTOBUF_BUILD_VERSION}.tar.gz https://github.com/google/protobuf/releases/download/${ARROW_PROTOBUF_BUILD_VERSION}/protobuf-all-${ARROW_PROTOBUF_BUILD_VERSION:1}.tar.gz"

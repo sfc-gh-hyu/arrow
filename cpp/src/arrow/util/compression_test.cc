@@ -437,6 +437,9 @@ TEST_P(CodecTest, StreamingCompressor) {
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming compression.";
   }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming compression.";
+  }
 
   int sizes[] = {0, 10, 100000};
   for (int data_size : sizes) {
@@ -461,6 +464,9 @@ TEST_P(CodecTest, StreamingDecompressor) {
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming decompression.";
   }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming decompression.";
+  }
 
   int sizes[] = {0, 10, 100000};
   for (int data_size : sizes) {
@@ -481,6 +487,9 @@ TEST_P(CodecTest, StreamingRoundtrip) {
   if (GetCompression() == Compression::LZ4 ||
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming compression.";
+  }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming compression.";
   }
 
   int sizes[] = {0, 10, 100000};
@@ -503,6 +512,9 @@ TEST_P(CodecTest, StreamingDecompressorReuse) {
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming decompression.";
   }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming decompression.";
+  }
 
   auto codec = MakeCodec();
   std::shared_ptr<Compressor> compressor;
@@ -517,6 +529,48 @@ TEST_P(CodecTest, StreamingDecompressorReuse) {
   ASSERT_OK(decompressor->Reset());
   data = MakeRandomData(200);
   CheckStreamingRoundtrip(compressor, decompressor, data);
+}
+
+TEST_P(CodecTest, StreamingMultiFlush) {
+  // Regression test for ARROW-11937
+  if (GetCompression() == Compression::SNAPPY) {
+    GTEST_SKIP() << "snappy doesn't support streaming decompression";
+  }
+  if (GetCompression() == Compression::LZ4 ||
+      GetCompression() == Compression::LZ4_HADOOP) {
+    GTEST_SKIP() << "LZ4 raw format doesn't support streaming decompression.";
+  }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming decompression.";
+  }
+  auto type = GetCompression();
+  ASSERT_OK_AND_ASSIGN(auto codec, Codec::Create(type));
+
+  std::shared_ptr<Compressor> compressor;
+  ASSERT_OK_AND_ASSIGN(compressor, codec->MakeCompressor());
+
+  // Grow the buffer and flush again while requested (up to a bounded number of times)
+  std::vector<uint8_t> compressed(1024);
+  Compressor::FlushResult result;
+  int attempts = 0;
+  int64_t actual_size = 0;
+  int64_t output_len = 0;
+  uint8_t* output = compressed.data();
+  do {
+    compressed.resize(compressed.capacity() * 2);
+    output_len = compressed.size() - actual_size;
+    output = compressed.data() + actual_size;
+    ASSERT_OK_AND_ASSIGN(result, compressor->Flush(output_len, output));
+    actual_size += result.bytes_written;
+    attempts++;
+  } while (attempts < 8 && result.should_retry);
+  // The LZ4 codec actually needs this many attempts to settle
+
+  // Flush again having done nothing - should not require retry
+  output_len = compressed.size() - actual_size;
+  output = compressed.data() + actual_size;
+  ASSERT_OK_AND_ASSIGN(result, compressor->Flush(output_len, output));
+  ASSERT_FALSE(result.should_retry);
 }
 
 #ifdef ARROW_WITH_ZLIB
@@ -548,6 +602,10 @@ INSTANTIATE_TEST_SUITE_P(TestBZ2, CodecTest, ::testing::Values(Compression::BZ2)
 
 #ifdef ARROW_WITH_ZSTD
 INSTANTIATE_TEST_SUITE_P(TestZSTD, CodecTest, ::testing::Values(Compression::ZSTD));
+#endif
+
+#ifdef ARROW_WITH_LZO
+INSTANTIATE_TEST_SUITE_P(TestLZO, CodecTest, ::testing::Values(Compression::LZO));
 #endif
 
 #ifdef ARROW_WITH_LZ4

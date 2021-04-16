@@ -44,6 +44,7 @@ bool IsCodecSupported(Compression::type codec) {
     case Compression::ZSTD:
     case Compression::LZ4:
     case Compression::LZ4_HADOOP:
+    case Compression::LZO:
       return true;
     default:
       return false;
@@ -56,12 +57,6 @@ std::unique_ptr<Codec> GetCodec(Compression::type codec) {
 
 std::unique_ptr<Codec> GetCodec(Compression::type codec, int compression_level) {
   std::unique_ptr<Codec> result;
-  if (codec == Compression::LZO) {
-    throw ParquetException(
-        "While LZO compression is supported by the Parquet format in "
-        "general, it is currently not supported by the C++ implementation.");
-  }
-
   if (!IsCodecSupported(codec)) {
     std::stringstream ss;
     ss << "Codec type " << Codec::GetCodecAsString(codec)
