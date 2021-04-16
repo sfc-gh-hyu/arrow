@@ -106,10 +106,6 @@ bool Codec::SupportsCompressionLevel(Compression::type codec) {
 Result<std::unique_ptr<Codec>> Codec::Create(Compression::type codec_type,
                                              int compression_level) {
   if (!IsAvailable(codec_type)) {
-    if (codec_type == Compression::LZO) {
-      return Status::NotImplemented("LZO codec not implemented");
-    }
-
     auto name = GetCodecAsString(codec_type);
     if (name == "unknown") {
       return Status::Invalid("Unrecognized codec");
@@ -159,6 +155,11 @@ Result<std::unique_ptr<Codec>> Codec::Create(Compression::type codec_type,
       codec = internal::MakeLz4HadoopRawCodec();
 #endif
       break;
+    case Compression::LZO:
+#ifdef ARROW_WITH_LZO
+      codec = internal::MakeLzoCodec();
+#endif
+      break;
     case Compression::ZSTD:
 #ifdef ARROW_WITH_ZSTD
       codec = internal::MakeZSTDCodec(compression_level);
@@ -195,7 +196,11 @@ bool Codec::IsAvailable(Compression::type codec_type) {
       return false;
 #endif
     case Compression::LZO:
+#ifdef ARROW_WITH_LZO
+      return true;
+#else
       return false;
+#endif
     case Compression::BROTLI:
 #ifdef ARROW_WITH_BROTLI
       return true;

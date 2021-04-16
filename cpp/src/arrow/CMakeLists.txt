@@ -279,6 +279,11 @@ if(ARROW_WITH_LZ4)
   list(APPEND ARROW_SRCS util/compression_lz4.cc)
 endif()
 
+if (ARROW_WITH_LZO)
+  add_definitions(-DARROW_WITH_LZO)
+  list(APPEND ARROW_SRCS util/compression_lzo.cc)
+endif()
+
 if(ARROW_WITH_SNAPPY)
   add_definitions(-DARROW_WITH_SNAPPY)
   list(APPEND ARROW_SRCS util/compression_snappy.cc)

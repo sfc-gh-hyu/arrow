@@ -44,6 +44,7 @@ bool IsCodecSupported(Compression::type codec) {
     case Compression::ZSTD:
     case Compression::LZ4:
     case Compression::LZ4_HADOOP:
+    case Compression::LZO:
       return true;
     default:
       return false;

@@ -62,6 +62,7 @@ set(ARROW_THIRDPARTY_DEPENDENCIES
     GTest
     LLVM
     Lz4
+    Lzo
     ORC
     re2
     Protobuf
@@ -157,6 +158,8 @@ macro(build_dependency DEPENDENCY_NAME)
     build_gtest()
   elseif("${DEPENDENCY_NAME}" STREQUAL "Lz4")
     build_lz4()
+  elseif("${DEPENDENCY_NAME}" STREQUAL "Lzo")
+    build_lzo()
   elseif("${DEPENDENCY_NAME}" STREQUAL "ORC")
     build_orc()
   elseif("${DEPENDENCY_NAME}" STREQUAL "Protobuf")
@@ -502,6 +505,14 @@ else()
   set_urls(
     LZ4_SOURCE_URL "https://github.com/lz4/lz4/archive/${ARROW_LZ4_BUILD_VERSION}.tar.gz"
     "https://github.com/ursa-labs/thirdparty/releases/download/latest/lz4-${ARROW_LZ4_BUILD_VERSION}.tar.gz"
+    )
+endif()
+
+if(DEFINED ENV{ARROW_LZO_URL})
+  set(LZO_SOURCE_URL "$ENV{ARROW_LZO_URL}")
+else()
+  set_urls(
+    LZO_SOURCE_URL "http://www.oberhumer.com/opensource/lzo/download/lzo-${ARROW_LZO_BUILD_VERSION}.tar.gz"
     )
 endif()
 
@@ -2052,6 +2063,45 @@ if(ARROW_WITH_LZ4)
   # TODO: Don't use global includes but rather target_include_directories
   get_target_property(LZ4_INCLUDE_DIR LZ4::lz4 INTERFACE_INCLUDE_DIRECTORIES)
   include_directories(SYSTEM ${LZ4_INCLUDE_DIR})
+endif()
+
+macro(build_lzo)
+  message(STATUS "Building LZO from source")
+  set(LZO_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/lzo_ep-prefix/src/lzo_ep-install")
+  if(MSVC)
+    message(FATAL_ERROR "Building lzo on windows is not supported yet.")
+  else()
+    set(LZO_STATIC_LIB_NAME liblzo2.a)
+  endif()
+  set(LZO_STATIC_LIB "${LZO_PREFIX}/lib64/${LZO_STATIC_LIB_NAME}")
+  set(LZO_CMAKE_ARGS ${EP_COMMON_CMAKE_ARGS} "-DCMAKE_INSTALL_PREFIX=${LZO_PREFIX}"
+                      -DENABLE_STATIC=1 -DENABLE_SHARED=0)
+
+  externalproject_add(lzo_ep
+                      URL ${LZO_SOURCE_URL} ${EP_LOG_OPTIONS}
+                      BUILD_BYPRODUCTS "${LZO_STATIC_LIB}"
+                      CMAKE_ARGS ${LZO_CMAKE_ARGS})
+
+  file(MAKE_DIRECTORY "${LZO_PREFIX}/include")
+
+  add_library(LZO::lzo STATIC IMPORTED)
+  set(LZO_LIBRARIES ${LZO_STATIC_LIB})
+  set(LZO_INCLUDE_DIRS "${LZO_PREFIX}/include")
+  set_target_properties(LZO::lzo
+                        PROPERTIES IMPORTED_LOCATION ${LZO_LIBRARIES}
+                                   INTERFACE_INCLUDE_DIRECTORIES ${LZO_INCLUDE_DIRS})
+
+  add_dependencies(LZO::lzo lzo_ep)
+
+  list(APPEND ARROW_BUNDLED_STATIC_LIBS LZO::lzo)
+endmacro()
+
+if(ARROW_WITH_LZO)
+  resolve_dependency(Lzo)
+
+  # TODO: Don't use global includes but rather target_include_directories
+  get_target_property(LZO_INCLUDE_DIR LZO::lzo INTERFACE_INCLUDE_DIRECTORIES)
+  include_directories(SYSTEM ${LZO_INCLUDE_DIR})
 endif()
 
 macro(build_zstd)

@@ -67,6 +67,9 @@ std::unique_ptr<Codec> MakeLz4HadoopRawCodec();
 // Lz4 frame format codec.
 std::unique_ptr<Codec> MakeLz4FrameCodec();
 
+// Lzo codec.
+std::unique_ptr<Codec> MakeLzoCodec();
+
 // ZSTD codec.
 
 // XXX level = 1 probably doesn't compress very much

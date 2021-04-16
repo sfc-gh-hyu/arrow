@@ -437,6 +437,9 @@ TEST_P(CodecTest, StreamingCompressor) {
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming compression.";
   }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming compression.";
+  }
 
   int sizes[] = {0, 10, 100000};
   for (int data_size : sizes) {
@@ -461,6 +464,9 @@ TEST_P(CodecTest, StreamingDecompressor) {
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming decompression.";
   }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming decompression.";
+  }
 
   int sizes[] = {0, 10, 100000};
   for (int data_size : sizes) {
@@ -482,6 +488,9 @@ TEST_P(CodecTest, StreamingRoundtrip) {
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming compression.";
   }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming compression.";
+  }
 
   int sizes[] = {0, 10, 100000};
   for (int data_size : sizes) {
@@ -502,6 +511,9 @@ TEST_P(CodecTest, StreamingDecompressorReuse) {
   if (GetCompression() == Compression::LZ4 ||
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming decompression.";
+  }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming decompression.";
   }
 
   auto codec = MakeCodec();
@@ -527,6 +539,9 @@ TEST_P(CodecTest, StreamingMultiFlush) {
   if (GetCompression() == Compression::LZ4 ||
       GetCompression() == Compression::LZ4_HADOOP) {
     GTEST_SKIP() << "LZ4 raw format doesn't support streaming decompression.";
+  }
+  if (GetCompression() == Compression::LZO) {
+    GTEST_SKIP() << "LZO doesn't support streaming decompression.";
   }
   auto type = GetCompression();
   ASSERT_OK_AND_ASSIGN(auto codec, Codec::Create(type));
@@ -587,6 +602,10 @@ INSTANTIATE_TEST_SUITE_P(TestBZ2, CodecTest, ::testing::Values(Compression::BZ2)
 
 #ifdef ARROW_WITH_ZSTD
 INSTANTIATE_TEST_SUITE_P(TestZSTD, CodecTest, ::testing::Values(Compression::ZSTD));
+#endif
+
+#ifdef ARROW_WITH_LZO
+INSTANTIATE_TEST_SUITE_P(TestLZO, CodecTest, ::testing::Values(Compression::LZO));
 #endif
 
 #ifdef ARROW_WITH_LZ4
